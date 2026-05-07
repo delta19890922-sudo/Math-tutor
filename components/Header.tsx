@@ -9,7 +9,7 @@ export default function Header() {
           href="/"
           className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
         >
-          Blog
+          阿饱数学胎教
         </Link>
         <div className="flex items-center gap-4">
           <nav className="flex items-center gap-6 text-sm font-medium">
