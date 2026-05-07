@@ -261,9 +261,17 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
   };
 
   const insertGeoGebra = () => {
-    const id = geoUrl.match(/(?:material|id)=(\d+)/)?.[1] || geoUrl.trim();
-    if (!id) return;
-    const iframe = `\n<iframe src="https://www.geogebra.org/material/iframe/id/${id}" width="100%" height="500" style="border:0;" allowfullscreen></iframe>\n`;
+    const url = geoUrl.trim();
+    if (!url) return;
+    let src = url;
+    const m = url.match(/geogebra\.org\/m\/(\w+)/);
+    const g = url.match(/geogebra\.org\/(\w+)\/(\w+)/);
+    if (m) {
+      src = `https://www.geogebra.org/material/iframe/id/${m[1]}`;
+    } else if (g && g[1] !== "material") {
+      src = `https://www.geogebra.org/${g[1]}/${g[2]}?embed`;
+    }
+    const iframe = `\n<iframe src="${src}" width="100%" height="500" style="border:1px solid #e4e4e4;border-radius:4px;" allowfullscreen></iframe>\n`;
     setContent((prev) => prev + iframe);
     setShowGeo(false);
     setGeoUrl("");
@@ -377,10 +385,10 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowGeo(false)}>
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-800" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold mb-3 text-zinc-900 dark:text-zinc-100">插入 GeoGebra</h3>
-            <p className="text-xs text-zinc-500 mb-3">在 GeoGebra 点「分享」→「嵌入」，粘贴 material ID 或完整 URL</p>
+            <p className="text-xs text-zinc-500 mb-3">粘贴 GeoGebra 链接，支持 geometry / m / material 格式</p>
             <input value={geoUrl} onChange={(e) => setGeoUrl(e.target.value)}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
-              placeholder="例如：https://www.geogebra.org/m/abc123 或 abc123" autoFocus />
+              placeholder="https://www.geogebra.org/geometry/xxx 或 /m/xxx" autoFocus />
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setShowGeo(false)}
                 className="px-4 py-1.5 text-sm rounded-lg bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300">
