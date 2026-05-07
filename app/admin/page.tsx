@@ -21,14 +21,22 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">
-        管理后台
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100">
+            管理后台
+          </h1>
+          <p className="text-sm text-zinc-400 mt-0.5">写文章、管理内容、一键部署</p>
+        </div>
+        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">A</span>
+        </div>
+      </div>
 
-      <div className="flex gap-1 mb-6 border-b border-zinc-200 dark:border-zinc-700">
-        <TabButton label="写文章" active={tab === "write"} onClick={() => setTab("write")} />
-        <TabButton label="现有文章" active={tab === "browse"} onClick={() => setTab("browse")} />
-        <TabButton label="垃圾箱" active={tab === "trash"} onClick={() => setTab("trash")} />
+      <div className="flex gap-1 mb-6">
+        <TabButton icon="✏️" label="写文章" active={tab === "write"} onClick={() => setTab("write")} />
+        <TabButton icon="📄" label="现有文章" active={tab === "browse"} onClick={() => setTab("browse")} />
+        <TabButton icon="🗑️" label="垃圾箱" active={tab === "trash"} onClick={() => setTab("trash")} />
       </div>
 
       {tab === "write" && <WriteTab editSlug={editSlug} onEditDone={() => setEditSlug(null)} />}
@@ -45,16 +53,17 @@ export default function AdminPage() {
   );
 }
 
-function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function TabButton({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+      className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
         active
-          ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
-          : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          ? "bg-white text-zinc-800 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700"
+          : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
       }`}
     >
+      <span className="text-xs">{icon}</span>
       {label}
     </button>
   );
@@ -88,15 +97,15 @@ function AutocompleteInput({
           if (e.key === "ArrowUp") { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); }
           if (e.key === "Enter" && selectedIdx >= 0) { onChange(filtered[selectedIdx]); setFocused(false); }
         }}
-        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
         placeholder={placeholder} />
       {focused && filtered.length > 0 && (
-        <div className="absolute z-10 top-full mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:bg-zinc-800 dark:border-zinc-700">
+        <div className="absolute z-10 top-full mt-1 w-full rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
           {filtered.map((s, i) => (
             <button key={s} type="button"
               onMouseDown={() => { onChange(s); setFocused(false); }}
-              className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 ${
-                i === selectedIdx ? "bg-zinc-100 dark:bg-zinc-700" : ""
+              className={`w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 ${
+                i === selectedIdx ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
               }`}>
               {s}
             </button>
@@ -137,31 +146,15 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
   useEffect(() => {
     if (editSlug) {
       fetch(`/api/posts/${editSlug}`).then((r) => r.json()).then((data) => {
-        setTitle(data.title || "");
-        setSlug(data.slug || "");
+        setTitle(data.title || ""); setSlug(data.slug || "");
         setDate(data.date?.slice(0, 10) || new Date().toISOString().slice(0, 10));
-        setDescription(data.description || "");
-        setTags((data.tags || []).join(", "));
-        setCategory(data.category || "");
-        setContent(data.rawContent || "");
-        setLoaded(true);
-        localStorage.removeItem(DRAFT_KEY);
-        onEditDone();
+        setDescription(data.description || ""); setTags((data.tags || []).join(", "));
+        setCategory(data.category || ""); setContent(data.rawContent || "");
+        setLoaded(true); localStorage.removeItem(DRAFT_KEY); onEditDone();
       });
     } else {
       const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) {
-        try {
-          const d = JSON.parse(saved);
-          setTitle(d.title || "");
-          setSlug(d.slug || "");
-          setDate(d.date || new Date().toISOString().slice(0, 10));
-          setDescription(d.description || "");
-          setTags(d.tags || "");
-          setCategory(d.category || "");
-          setContent(d.content || "");
-        } catch {}
-      }
+      if (saved) { try { const d = JSON.parse(saved); setTitle(d.title || ""); setSlug(d.slug || ""); setDate(d.date || new Date().toISOString().slice(0, 10)); setDescription(d.description || ""); setTags(d.tags || ""); setCategory(d.category || ""); setContent(d.content || ""); } catch {} }
       setLoaded(true);
     }
   }, [editSlug]);
@@ -186,38 +179,24 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
     if (!content) { setPreview(""); return; }
     previewTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch("/api/admin/preview", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
-        });
+        const res = await fetch("/api/admin/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }) });
         const data = await res.json();
         setPreview(data.html || "");
-      } catch {
-        setPreview("<p>预览失败</p>");
-      }
+      } catch { setPreview("<p>预览失败</p>"); }
     }, 300);
     return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
   }, [content]);
 
   const pollDeploy = () => {
-    setDeployState("部署中");
+    setDeployState("部署中...");
     const check = async () => {
       try {
         const res = await fetch("/api/admin/deploy-status");
         const data = await res.json();
-        if (data.state === "READY") {
-          setDeployState("部署完成 ✓");
-          setLog((prev) => prev + "\n[部署] 已上线！\n");
-        } else if (data.state === "ERROR") {
-          setDeployState("部署失败 ✗");
-          setLog((prev) => prev + "\n[部署] 构建失败，请检查日志。\n");
-        } else {
-          setTimeout(check, 5000);
-        }
-      } catch {
-        setTimeout(check, 5000);
-      }
+        if (data.state === "READY") { setDeployState("部署完成"); setLog((prev) => prev + "\n[部署] 已上线！\n"); }
+        else if (data.state === "ERROR") { setDeployState("部署失败"); setLog((prev) => prev + "\n[部署] 构建失败。\n"); }
+        else { setTimeout(check, 5000); }
+      } catch { setTimeout(check, 5000); }
     };
     setTimeout(check, 5000);
   };
@@ -231,11 +210,9 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
   const fullContent = buildFrontmatter() + "\n" + content;
 
   const handleSave = async () => {
-    setSaving(true);
-    setMessage("");
+    setSaving(true); setMessage("");
     try {
-      const res = await fetch("/api/admin/save-post", { method: "POST",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, content: fullContent }) });
+      const res = await fetch("/api/admin/save-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, content: fullContent }) });
       const data = await res.json();
       setMessage(data.ok ? "已保存到本地" : data.error);
       if (data.ok) localStorage.removeItem(DRAFT_KEY);
@@ -245,164 +222,152 @@ function WriteTab({ editSlug, onEditDone }: { editSlug: string | null; onEditDon
 
   const handlePublish = async () => {
     if (!slug) return;
-    setPublishing(true);
-    setMessage("");
-    setLog("");
-    setDeployState(null);
+    setPublishing(true); setMessage(""); setLog(""); setDeployState(null);
     try {
-      const res = await fetch("/api/admin/publish", { method: "POST",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, title }) });
+      const res = await fetch("/api/admin/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, title }) });
       const data = await res.json();
-      setMessage(data.ok ? "已推送" : data.error);
-      setLog(data.log || "");
+      setMessage(data.ok ? "已推送" : data.error); setLog(data.log || "");
       if (data.ok) { localStorage.removeItem(DRAFT_KEY); pollDeploy(); }
     } catch { setMessage("发布失败"); }
     setPublishing(false);
   };
 
   const insertGeoGebra = () => {
-    const url = geoUrl.trim();
-    if (!url) return;
+    const url = geoUrl.trim(); if (!url) return;
     let src = url;
-    const m = url.match(/geogebra\.org\/m\/(\w+)/);
-    const g = url.match(/geogebra\.org\/(\w+)\/(\w+)/);
-    if (m) {
-      src = `https://www.geogebra.org/material/iframe/id/${m[1]}`;
-    } else if (g && g[1] !== "material") {
-      src = `https://www.geogebra.org/${g[1]}/${g[2]}?embed`;
-    }
-    const iframe = `\n<iframe src="${src}" width="100%" height="500" style="border:1px solid #e4e4e4;border-radius:4px;" allowfullscreen></iframe>\n`;
-    setContent((prev) => prev + iframe);
-    setShowGeo(false);
-    setGeoUrl("");
+    const m = url.match(/geogebra\.org\/m\/(\w+)/); const g = url.match(/geogebra\.org\/(\w+)\/(\w+)/);
+    if (m) { src = `https://www.geogebra.org/material/iframe/id/${m[1]}`; }
+    else if (g && g[1] !== "material") { src = `https://www.geogebra.org/${g[1]}/${g[2]}?embed`; }
+    setContent((prev) => prev + `\n\n<iframe src="${src}" width="100%" height="500" style="border:1px solid #e4e4e4;border-radius:4px;" allowfullscreen></iframe>\n\n`);
+    setShowGeo(false); setGeoUrl("");
   };
 
   const wordCount = (() => {
     const cn = (content.match(/[\u4e00-\u9fff]/g) || []).length;
     const en = content.replace(/[\u4e00-\u9fff]/g, " ").split(/\s+/).filter(Boolean).length;
-    const total = cn + en;
-    const min = Math.max(1, Math.round(cn / 300 + en / 200));
-    return { total, min };
+    return { total: cn + en, min: Math.max(1, Math.round(cn / 300 + en / 200)) };
   })();
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">标题</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-            placeholder="文章标题" />
+    <div className="space-y-5">
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wide">标题</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
+              placeholder="文章标题" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wide">日期</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wide">标签</label>
+            <AutocompleteInput value={tags} onChange={setTags}
+              placeholder="数学, 随笔" suggestions={metadata.tags.map((t) => t + ", ").flatMap((s) => [s, s])} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wide">分类</label>
+            <AutocompleteInput value={category} onChange={setCategory}
+              placeholder="技术" suggestions={metadata.categories} />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">日期</label>
-          <input value={date} onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">标签 (逗号分隔)</label>
-          <AutocompleteInput value={tags} onChange={setTags}
-            placeholder="数学, 随笔" suggestions={metadata.tags.map((t) => t + ", ").flatMap((s) => [s, s])} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">分类</label>
-          <AutocompleteInput value={category} onChange={setCategory}
-            placeholder="技术" suggestions={metadata.categories} />
-        </div>
-      </div>
-
-      <div className="mb-2">
-        <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">
-          描述 {slug && <span className="text-zinc-400 ml-2">slug: {slug}</span>}
-        </label>
-        <input value={description} onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-          placeholder="简短描述" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mt-4" style={{ minHeight: 500 }}>
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">
-            正文 (Markdown)
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-wide">
+            描述 {slug && <span className="ml-2 font-mono text-zinc-300 lowercase">/ {slug}</span>}
           </label>
-          <div className="flex gap-1 mb-1">
-            <button type="button" onClick={() => setShowGeo(true)}
-              className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-              + GeoGebra
-            </button>
-          </div>
-          <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)}
-            className="flex-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm font-mono resize-none dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-            placeholder="## 标题&#10;&#10;正文内容..." />
-          <div className="mt-1 text-xs text-zinc-400 text-right">
-            {wordCount.total} 字 · 约 {wordCount.min} 分钟
-          </div>
+          <input value={description} onChange={(e) => setDescription(e.target.value)}
+            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
+            placeholder="简短描述" />
         </div>
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">预览</label>
-          <div className="flex-1 rounded-lg border border-zinc-300 p-4 overflow-auto dark:border-zinc-700">
-            {preview ? (
-              <div className="prose prose-sm prose-zinc max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: preview }} />
-            ) : (
-              <p className="text-sm text-zinc-400">输入内容后自动预览...</p>
-            )}
+      </div>
+
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div className="grid grid-cols-2 gap-4" style={{ minHeight: 500 }}>
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">正文 (Markdown)</label>
+              <button type="button" onClick={() => setShowGeo(true)}
+                className="text-xs px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/30">
+                + GeoGebra
+              </button>
+            </div>
+            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)}
+              className="flex-1 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-mono resize-none transition-colors placeholder:text-zinc-300 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
+              placeholder="## 标题&#10;&#10;正文内容..." />
+            <div className="mt-2 flex items-center justify-between text-xs text-zinc-400">
+              <span>{wordCount.total} 字 · 约 {wordCount.min} 分钟</span>
+              {message && (
+                <span className={`${message.includes("成功") || message.includes("推送") ? "text-emerald-500" : "text-red-400"}`}>
+                  {message}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wide">预览</label>
+            <div className="flex-1 rounded-lg border border-zinc-200 bg-white p-4 overflow-auto dark:border-zinc-700 dark:bg-zinc-800/80">
+              {preview ? (
+                <div className="prose prose-sm prose-zinc max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: preview }} />
+              ) : (
+                <p className="text-sm text-zinc-300 dark:text-zinc-500">输入内容后自动预览...</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-4">
-        <button onClick={handleSave} disabled={saving || !slug}
-          className="rounded-lg bg-zinc-200 px-6 py-2 text-sm font-medium hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600 dark:text-zinc-100">
-          {saving ? "保存中..." : "保存到本地"}
-        </button>
-        <button onClick={handlePublish} disabled={publishing || !slug}
-          className="rounded-lg bg-zinc-900 px-6 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
-          {publishing ? "发布中..." : "Git Push + 部署"}
-        </button>
-        {message && (
-          <span className={`text-sm ${message.includes("成功") ? "text-green-600" : "text-red-600"}`}>
-            {message}
-          </span>
-        )}
-        {deployState && (
-          <span className={`text-sm ${
-            deployState.includes("✓") ? "text-green-600" :
-            deployState.includes("✗") ? "text-red-600" : "text-amber-600"
-          }`}>
-            {deployState}
-          </span>
-        )}
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div className="flex items-center gap-3">
+          <button onClick={handleSave} disabled={saving || !slug}
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-800 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200">
+            {saving ? "保存中..." : "💾 保存到本地"}
+          </button>
+          <button onClick={handlePublish} disabled={publishing || !slug}
+            className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-40 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+            {publishing ? "发布中..." : "🚀 Git Push + 部署"}
+          </button>
+          {deployState && (
+            <span className={`text-sm ${
+              deployState.includes("完成") ? "text-emerald-500" :
+              deployState.includes("失败") ? "text-red-400" : "text-amber-500"
+            }`}>
+              {deployState}
+            </span>
+          )}
+        </div>
       </div>
 
       {log && (
-        <pre className="mt-4 rounded-lg bg-zinc-100 p-4 text-xs overflow-auto dark:bg-zinc-800 dark:text-zinc-300">
+        <pre className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-xs leading-relaxed overflow-auto dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
           {log}
         </pre>
       )}
 
       {showGeo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowGeo(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowGeo(false)}>
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-800" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-semibold mb-3 text-zinc-900 dark:text-zinc-100">插入 GeoGebra</h3>
-            <p className="text-xs text-zinc-500 mb-3">粘贴 GeoGebra 链接，支持 geometry / m / material 格式</p>
+            <h3 className="text-base font-semibold mb-1 text-zinc-800 dark:text-zinc-100">插入 GeoGebra</h3>
+            <p className="text-xs text-zinc-400 mb-4">粘贴 GeoGebra 链接，支持 geometry / m / material 格式</p>
             <input value={geoUrl} onChange={(e) => setGeoUrl(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-100"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-700 dark:text-zinc-100 dark:focus:border-emerald-500"
               placeholder="https://www.geogebra.org/geometry/xxx 或 /m/xxx" autoFocus />
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setShowGeo(false)}
-                className="px-4 py-1.5 text-sm rounded-lg bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300">
+                className="px-4 py-2 text-sm rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-700">
                 取消
               </button>
               <button onClick={insertGeoGebra}
-                className="px-4 py-1.5 text-sm rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900">
+                className="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-white hover:bg-emerald-600">
                 插入
               </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -421,16 +386,12 @@ function BrowseTab({ onEdit }: { onEdit: (slug: string) => void }) {
   useEffect(() => { loadPosts(); }, []);
 
   const handleSelect = async (slug: string) => {
-    setSelected(slug);
-    setHtml("");
+    setSelected(slug); setHtml("");
     try {
       const res = await fetch(`/api/posts/${slug}`);
       const data = await res.json();
-      const previewRes = await fetch("/api/admin/preview", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: data.rawContent }),
-      });
-      const previewData = await previewRes.json();
-      setHtml(previewData.html || "");
+      const previewRes = await fetch("/api/admin/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: data.rawContent }) });
+      setHtml((await previewRes.json()).html || "");
     } catch { setHtml("<p>加载失败</p>"); }
   };
 
@@ -438,53 +399,57 @@ function BrowseTab({ onEdit }: { onEdit: (slug: string) => void }) {
     if (!confirm(`确定将「${title}」移到垃圾箱？`)) return;
     setDeleting(slug);
     try {
-      const res = await fetch("/api/admin/delete-post", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug }),
-      });
+      const res = await fetch("/api/admin/delete-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug }) });
       const data = await res.json();
-      if (data.ok) {
-        if (selected === slug) { setSelected(null); setHtml(""); }
-        loadPosts();
-      } else { alert(`删除失败: ${data.error}`); }
+      if (data.ok) { if (selected === slug) { setSelected(null); setHtml(""); } loadPosts(); }
+      else { alert(`删除失败: ${data.error}`); }
     } catch { alert("删除失败"); }
     setDeleting(null);
   };
 
   return (
-    <div className="grid grid-cols-[340px_1fr] gap-6" style={{ minHeight: 500 }}>
-      <div className="border border-zinc-200 rounded-lg overflow-auto dark:border-zinc-700">
+    <div className="grid grid-cols-[340px_1fr] gap-5" style={{ minHeight: 500 }}>
+      <div className="rounded-xl border border-zinc-200 bg-white overflow-auto dark:border-zinc-700 dark:bg-zinc-800/50">
+        <div className="sticky top-0 border-b border-zinc-200 bg-white/80 backdrop-blur-sm px-4 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/80">
+          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
+            {loading ? "加载中..." : `${posts.length} 篇文章`}
+          </span>
+        </div>
         {loading ? (
           <p className="p-4 text-sm text-zinc-400">加载中...</p>
         ) : posts.length === 0 ? (
           <p className="p-4 text-sm text-zinc-400">暂无文章</p>
         ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-700/50">
             {posts.map((post) => (
-              <li key={post.slug} className="group flex items-center gap-1 px-4 py-3">
-                <button onClick={() => handleSelect(post.slug)}
-                  className={`flex-1 text-left text-sm transition-colors ${
-                    selected === post.slug
-                      ? "text-zinc-900 dark:text-zinc-100"
-                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                  }`}>
-                  <div className="font-medium truncate">{post.title}</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">{post.date}</div>
-                </button>
-                <button onClick={() => onEdit(post.slug)}
-                  className="shrink-0 text-xs px-2 py-1 rounded text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:text-zinc-300 dark:hover:bg-zinc-700 transition-opacity">
-                  编辑
-                </button>
-                <button onClick={() => handleDelete(post.slug, post.title)} disabled={deleting === post.slug}
-                  className="shrink-0 text-xs text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity disabled:opacity-50">
-                  {deleting === post.slug ? "..." : "删除"}
-                </button>
-              </li>
+              <div key={post.slug}
+                className={`group flex items-center gap-1 px-4 py-3 cursor-pointer transition-colors ${
+                  selected === post.slug ? "bg-emerald-50/50 dark:bg-emerald-900/10" : "hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
+                }`}
+                onClick={() => handleSelect(post.slug)}>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-medium truncate ${selected === post.slug ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-700 dark:text-zinc-300"}`}>
+                    {post.title}
+                  </div>
+                  <div className="text-xs text-zinc-400 mt-0.5">{post.date} · {post.category}</div>
+                </div>
+                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={() => onEdit(post.slug)}
+                    className="text-xs px-2 py-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:text-zinc-300 dark:hover:bg-zinc-700">
+                    编辑
+                  </button>
+                  <button onClick={() => handleDelete(post.slug, post.title)} disabled={deleting === post.slug}
+                    className="text-xs px-2 py-1 rounded text-red-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50">
+                    {deleting === post.slug ? "..." : "删除"}
+                  </button>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
-      <div className="rounded-lg border border-zinc-200 p-6 overflow-auto dark:border-zinc-700">
+      <div className="rounded-xl border border-zinc-200 bg-white p-6 overflow-auto dark:border-zinc-700 dark:bg-zinc-800/50">
         {selected ? (
           html ? (
             <div className="prose prose-zinc max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: html }} />
@@ -492,7 +457,9 @@ function BrowseTab({ onEdit }: { onEdit: (slug: string) => void }) {
             <p className="text-sm text-zinc-400">加载中...</p>
           )
         ) : (
-          <p className="text-sm text-zinc-400">从左侧选择一篇文章预览</p>
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-zinc-300 dark:text-zinc-500">从左侧选择一篇文章预览</p>
+          </div>
         )}
       </div>
     </div>
@@ -513,12 +480,9 @@ function TrashTab() {
   useEffect(() => { loadTrash(); }, []);
 
   const handleRestore = async (slug: string, title: string) => {
-    setRestoring(slug);
-    setMsg("");
+    setRestoring(slug); setMsg("");
     try {
-      const res = await fetch("/api/admin/restore-post", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug }),
-      });
+      const res = await fetch("/api/admin/restore-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug }) });
       const data = await res.json();
       if (data.ok) { setMsg(`已恢复「${title}」`); loadTrash(); } else { alert(`恢复失败: ${data.error}`); }
     } catch { alert("恢复失败"); }
@@ -526,25 +490,27 @@ function TrashTab() {
   };
 
   return (
-    <div>
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800/50">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">垃圾箱中的文章可以恢复，永久删除请手动删除文件。</p>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
+        <p className="text-sm text-zinc-400">垃圾箱中的文章可以恢复</p>
+        {msg && <span className="text-sm text-emerald-500">{msg}</span>}
       </div>
       {loading ? (
         <p className="text-sm text-zinc-400">加载中...</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-zinc-400">垃圾箱是空的</p>
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-zinc-300 dark:text-zinc-500">垃圾箱是空的</p>
+        </div>
       ) : (
-        <div className="border border-zinc-200 rounded-lg divide-y divide-zinc-200 dark:border-zinc-700 dark:divide-zinc-700">
+        <div className="divide-y divide-zinc-100 dark:divide-zinc-700/50">
           {items.map((item) => (
-            <div key={item.slug} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</div>
+            <div key={item.slug} className="flex items-center justify-between py-3">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-zinc-700 truncate dark:text-zinc-300">{item.title}</div>
                 <div className="text-xs text-zinc-400 mt-0.5">{item.date} · {item.category}</div>
               </div>
               <button onClick={() => handleRestore(item.slug, item.title)} disabled={restoring === item.slug}
-                className="text-xs px-3 py-1.5 rounded-md bg-zinc-200 text-zinc-700 hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600">
+                className="text-xs px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-700">
                 {restoring === item.slug ? "..." : "恢复"}
               </button>
             </div>
