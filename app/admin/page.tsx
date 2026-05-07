@@ -64,7 +64,7 @@ function WriteTab() {
   const [message, setMessage] = useState("");
   const [log, setLog] = useState("");
 
-  const previewTimer = useRef<ReturnType<typeof setTimeout>>();
+  const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (!title) return;
