@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function AdminPage() {
   const [title, setTitle] = useState("");
@@ -16,6 +16,8 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [log, setLog] = useState("");
 
+  const previewTimer = useRef<ReturnType<typeof setTimeout>>();
+
   useEffect(() => {
     if (!title) return;
     const clean = title
@@ -25,6 +27,25 @@ export default function AdminPage() {
       .slice(0, 60);
     setSlug(clean || `post-${Date.now()}`);
   }, [title]);
+
+  useEffect(() => {
+    if (previewTimer.current) clearTimeout(previewTimer.current);
+    if (!content) { setPreview(""); return; }
+    previewTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/admin/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        setPreview(data.html || "");
+      } catch {
+        setPreview("<p>预览失败</p>");
+      }
+    }, 300);
+    return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
+  }, [content]);
 
   const buildFrontmatter = () => {
     const tagList = tags
