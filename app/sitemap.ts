@@ -2,7 +2,7 @@ import { getPosts } from "@/lib/posts";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://your-domain.com";
+  const baseUrl = "https://blog-eight-sand.vercel.app";
   const posts = await getPosts();
   const tags = new Set<string>();
   for (const post of posts) {

@@ -2,7 +2,7 @@ import { getPosts } from "@/lib/posts";
 
 export async function GET() {
   const posts = await getPosts();
-  const baseUrl = "https://your-domain.com";
+  const baseUrl = "https://blog-eight-sand.vercel.app";
 
   const items = posts.map((post) => ({
     title: post.frontmatter.title,
