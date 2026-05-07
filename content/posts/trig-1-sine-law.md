@@ -31,6 +31,8 @@ $$
 
 作三角形 $ABC$ 的外接圆，取 $BC = a$，连接圆心 $O$ 与 $B, C$，则 $\angle BOC = 2A$。由圆周角定理，在 $\triangle BOC$ 中有 $a = 2R\sin A$。
 
+<iframe src="https://www.geogebra.org/geometry/wjucxens?embed" width="100%" height="500" allowfullscreen style="border: 1px solid #e4e4e4;border-radius: 4px;"></iframe>
+
 ## 典型例题
 
 ### 例 1：已知两角一边
