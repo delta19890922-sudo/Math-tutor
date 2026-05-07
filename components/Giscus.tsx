@@ -10,10 +10,10 @@ export default function Giscus() {
 
     const script = document.createElement("script");
     script.src = "https://giscus.app/client.js";
-    script.setAttribute("data-repo", "owner/repo");
-    script.setAttribute("data-repo-id", "R_kgXXXXXXXX");
+    script.setAttribute("data-repo", "delta19890922-sudo/Math-tutor");
+    script.setAttribute("data-repo-id", "R_kgDOSXH3SQ");
     script.setAttribute("data-category", "Announcements");
-    script.setAttribute("data-category-id", "DIC_kwXXXXXXXX");
+    script.setAttribute("data-category-id", "DIC_kwDOSXH3Sc4C8h4K");
     script.setAttribute("data-mapping", "pathname");
     script.setAttribute("data-strict", "0");
     script.setAttribute("data-reactions-enabled", "1");
