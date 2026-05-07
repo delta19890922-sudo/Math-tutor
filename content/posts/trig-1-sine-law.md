@@ -7,6 +7,8 @@ category: "高一必修一"
 slug: "trig-1-sine-law"
 ---
 
+![trigonometry](https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800)
+
 ## 回顾：直角三角形中的正弦
 
 在直角三角形中，正弦的定义是：

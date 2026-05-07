@@ -7,6 +7,8 @@ category: "高一必修一"
 slug: "trig-2-cosine-law"
 ---
 
+![cosine](https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=800)
+
 ## 余弦定理
 
 对于任意三角形 $ABC$，有：

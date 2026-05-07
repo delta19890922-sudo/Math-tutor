@@ -7,6 +7,8 @@ category: "高一必修一"
 slug: "trig-3-area-formula"
 ---
 
+![area](https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=800)
+
 ## 三角形面积公式
 
 ### 1. 底×高÷2（基础）

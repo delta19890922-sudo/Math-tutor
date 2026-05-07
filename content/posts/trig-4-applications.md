@@ -7,6 +7,8 @@ category: "高一必修一"
 slug: "trig-4-applications"
 ---
 
+![surveying](https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800)
+
 ## 常见实际场景
 
 解三角形在实际中广泛应用于：

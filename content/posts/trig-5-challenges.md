@@ -7,6 +7,8 @@ category: "高一必修一"
 slug: "trig-5-challenges"
 ---
 
+![math-challenge](https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800)
+
 ## 核心思想回顾
 
 解三角形的本质：**在三角形中，已知三个元素（至少一条边），求其余元素。**
