@@ -2,7 +2,55 @@
 
 import { useState, useEffect, useRef } from "react";
 
+type Tab = "write" | "browse";
+
+interface PostMeta {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  date: string;
+  category: string;
+}
+
 export default function AdminPage() {
+  const [tab, setTab] = useState<Tab>("write");
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">
+        管理后台
+      </h1>
+
+      <div className="flex gap-1 mb-6 border-b border-zinc-200 dark:border-zinc-700">
+        <button
+          onClick={() => setTab("write")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+            tab === "write"
+              ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
+              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          }`}
+        >
+          写文章
+        </button>
+        <button
+          onClick={() => setTab("browse")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+            tab === "browse"
+              ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
+              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          }`}
+        >
+          现有文章
+        </button>
+      </div>
+
+      {tab === "write" ? <WriteTab /> : <BrowseTab />}
+    </div>
+  );
+}
+
+function WriteTab() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -106,11 +154,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">
-        写文章
-      </h1>
-
+    <>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1 text-zinc-700 dark:text-zinc-300">标题</label>
@@ -196,6 +240,83 @@ export default function AdminPage() {
           {log}
         </pre>
       )}
+    </>
+  );
+}
+
+function BrowseTab() {
+  const [posts, setPosts] = useState<PostMeta[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [html, setHtml] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/posts")
+      .then((r) => r.json())
+      .then((data) => { setPosts(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleSelect = async (slug: string) => {
+    setSelected(slug);
+    setHtml("");
+    try {
+      const res = await fetch(`/api/posts/${slug}`);
+      const data = await res.json();
+      const previewRes = await fetch("/api/admin/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: data.rawContent }),
+      });
+      const previewData = await previewRes.json();
+      setHtml(previewData.html || "");
+    } catch {
+      setHtml("<p>加载失败</p>");
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-[280px_1fr] gap-6" style={{ minHeight: 500 }}>
+      <div className="border border-zinc-200 rounded-lg overflow-auto dark:border-zinc-700">
+        {loading ? (
+          <p className="p-4 text-sm text-zinc-400">加载中...</p>
+        ) : posts.length === 0 ? (
+          <p className="p-4 text-sm text-zinc-400">暂无文章</p>
+        ) : (
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <button
+                  onClick={() => handleSelect(post.slug)}
+                  className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                    selected === post.slug
+                      ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                      : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
+                  }`}
+                >
+                  <div className="font-medium">{post.title}</div>
+                  <div className="text-xs text-zinc-400 mt-0.5">{post.date}</div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-zinc-200 p-6 overflow-auto dark:border-zinc-700">
+        {selected ? (
+          html ? (
+            <div
+              className="prose prose-zinc max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          ) : (
+            <p className="text-sm text-zinc-400">加载中...</p>
+          )
+        ) : (
+          <p className="text-sm text-zinc-400">从左侧选择一篇文章预览</p>
+        )}
+      </div>
     </div>
   );
 }

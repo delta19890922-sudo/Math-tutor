@@ -7,6 +7,8 @@ category: "技术"
 slug: "latex-intro"
 ---
 
+![math](https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=800)
+
 ## 什么是 LaTeX？
 
 LaTeX（读音 lay-tek 或 lah-tek）是一个高质量的排版系统，由 Leslie Lamport 在 20 世纪 80 年代基于 Donald Knuth 的 TeX 系统开发。它特别适合处理包含数学公式的文档。

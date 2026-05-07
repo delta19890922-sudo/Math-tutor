@@ -7,6 +7,8 @@ category: "技术"
 slug: "opencode-intro"
 ---
 
+![coding](https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800)
+
 ## 什么是 opencode？
 
 opencode 是一款运行在终端中的 AI 编程助手，由 anomalyco 开发。它直接集成在命令行环境里，能帮你理解代码、修改代码、回答技术问题，甚至自动执行 Git 操作。

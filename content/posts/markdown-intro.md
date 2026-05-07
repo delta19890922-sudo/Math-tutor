@@ -7,6 +7,8 @@ category: "技术"
 slug: "markdown-intro"
 ---
 
+![writing](https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800)
+
 ## 什么是 Markdown？
 
 Markdown 由 John Gruber 于 2004 年创建，是一种轻量级标记语言。它让你用纯文本格式编写文档，同时能方便地转换为 HTML。
