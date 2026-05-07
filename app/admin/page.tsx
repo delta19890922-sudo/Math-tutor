@@ -63,8 +63,10 @@ function WriteTab() {
   const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState("");
   const [log, setLog] = useState("");
+  const [deployState, setDeployState] = useState<string | null>(null);
 
   const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const deployTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (!title) return;
@@ -94,6 +96,28 @@ function WriteTab() {
     }, 300);
     return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
   }, [content]);
+
+  const pollDeploy = () => {
+    setDeployState("部署中");
+    const check = async () => {
+      try {
+        const res = await fetch("/api/admin/deploy-status");
+        const data = await res.json();
+        if (data.state === "READY") {
+          setDeployState("部署完成 ✓");
+          setLog((prev) => prev + "\n[部署] 已上线！\n");
+        } else if (data.state === "ERROR") {
+          setDeployState("部署失败 ✗");
+          setLog((prev) => prev + "\n[部署] 构建失败，请检查日志。\n");
+        } else {
+          deployTimer.current = setTimeout(check, 5000);
+        }
+      } catch {
+        deployTimer.current = setTimeout(check, 5000);
+      }
+    };
+    setTimeout(check, 5000);
+  };
 
   const buildFrontmatter = () => {
     const tagList = tags
@@ -138,6 +162,7 @@ function WriteTab() {
     setPublishing(true);
     setMessage("");
     setLog("");
+    setDeployState(null);
     try {
       const res = await fetch("/api/admin/publish", {
         method: "POST",
@@ -145,8 +170,9 @@ function WriteTab() {
         body: JSON.stringify({ slug, title }),
       });
       const data = await res.json();
-      setMessage(data.ok ? "发布成功!" : data.error);
+      setMessage(data.ok ? "已推送" : data.error);
       setLog(data.log || "");
+      if (data.ok) pollDeploy();
     } catch {
       setMessage("发布失败");
     }
@@ -233,6 +259,15 @@ function WriteTab() {
             {message}
           </span>
         )}
+        {deployState && (
+          <span className={`text-sm ${
+            deployState.includes("✓") ? "text-green-600" :
+            deployState.includes("✗") ? "text-red-600" :
+            "text-amber-600"
+          }`}>
+            {deployState}
+          </span>
+        )}
       </div>
 
       {log && (
@@ -249,13 +284,17 @@ function BrowseTab() {
   const [selected, setSelected] = useState<string | null>(null);
   const [html, setHtml] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadPosts = () => {
+    setLoading(true);
     fetch("/api/posts")
       .then((r) => r.json())
       .then((data) => { setPosts(data); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadPosts(); }, []);
 
   const handleSelect = async (slug: string) => {
     setSelected(slug);
@@ -275,8 +314,30 @@ function BrowseTab() {
     }
   };
 
+  const handleDelete = async (slug: string, title: string) => {
+    if (!confirm(`确定删除「${title}」？删除后不可恢复。`)) return;
+    setDeleting(slug);
+    try {
+      const res = await fetch("/api/admin/delete-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (selected === slug) { setSelected(null); setHtml(""); }
+        loadPosts();
+      } else {
+        alert(`删除失败: ${data.error}`);
+      }
+    } catch {
+      alert("删除失败");
+    }
+    setDeleting(null);
+  };
+
   return (
-    <div className="grid grid-cols-[280px_1fr] gap-6" style={{ minHeight: 500 }}>
+    <div className="grid grid-cols-[320px_1fr] gap-6" style={{ minHeight: 500 }}>
       <div className="border border-zinc-200 rounded-lg overflow-auto dark:border-zinc-700">
         {loading ? (
           <p className="p-4 text-sm text-zinc-400">加载中...</p>
@@ -285,17 +346,24 @@ function BrowseTab() {
         ) : (
           <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
             {posts.map((post) => (
-              <li key={post.slug}>
+              <li key={post.slug} className="group flex items-center gap-2 px-4 py-3">
                 <button
                   onClick={() => handleSelect(post.slug)}
-                  className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                  className={`flex-1 text-left text-sm transition-colors ${
                     selected === post.slug
-                      ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                      : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
+                      ? "text-zinc-900 dark:text-zinc-100"
+                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                   }`}
                 >
-                  <div className="font-medium">{post.title}</div>
+                  <div className="font-medium truncate">{post.title}</div>
                   <div className="text-xs text-zinc-400 mt-0.5">{post.date}</div>
+                </button>
+                <button
+                  onClick={() => handleDelete(post.slug, post.title)}
+                  disabled={deleting === post.slug}
+                  className="shrink-0 text-xs text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity disabled:opacity-50"
+                >
+                  {deleting === post.slug ? "..." : "删除"}
                 </button>
               </li>
             ))}
