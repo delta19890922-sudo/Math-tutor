@@ -18,32 +18,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!title) return;
-    setSlug(title
+    const clean = title
       .toLowerCase()
-      .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+      .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
-      .slice(0, 60));
+      .slice(0, 60);
+    setSlug(clean || `post-${Date.now()}`);
   }, [title]);
-
-  const updatePreview = useCallback(async (md: string) => {
-    if (!md.trim()) { setPreview(""); return; }
-    try {
-      const res = await fetch("/api/admin/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: md }),
-      });
-      const data = await res.json();
-      setPreview(data.html);
-    } catch {
-      setPreview("<p>预览加载失败</p>");
-    }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => updatePreview(content), 500);
-    return () => clearTimeout(timer);
-  }, [content, updatePreview]);
 
   const buildFrontmatter = () => {
     const tagList = tags
@@ -59,6 +40,7 @@ export default function AdminPage() {
       `description: "${description}"`,
       `tags: [${tagList}]`,
       `category: "${category}"`,
+      `slug: "${slug}"`,
       "---",
       "",
     ].join("\n");

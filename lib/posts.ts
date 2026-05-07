@@ -30,7 +30,7 @@ export async function getPosts(): Promise<Post[]> {
       const { data, content } = matter(fileContent);
 
       return {
-        slug,
+        slug: data.slug || slug,
         frontmatter: {
           title: data.title || slug,
           date: data.date || new Date().toISOString(),
@@ -50,21 +50,8 @@ export async function getPosts(): Promise<Post[]> {
 
 export async function getPost(slug: string): Promise<Post | null> {
   try {
-    const filePath = path.join(postsDirectory, `${slug}.md`);
-    const fileContent = fs.readFileSync(filePath, "utf-8");
-    const { data, content } = matter(fileContent);
-
-    return {
-      slug,
-      frontmatter: {
-        title: data.title || slug,
-        date: data.date || new Date().toISOString(),
-        description: data.description || "",
-        tags: data.tags || [],
-        category: data.category || "未分类",
-      },
-      content,
-    };
+    const posts = await getPosts();
+    return posts.find((p) => p.slug === slug) || null;
   } catch {
     return null;
   }
