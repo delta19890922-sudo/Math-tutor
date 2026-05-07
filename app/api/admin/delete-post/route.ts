@@ -9,12 +9,26 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "slug 不能为空" }, { status: 400 });
     }
 
-    const filePath = path.join(process.cwd(), "content/posts", `${slug}.md`);
-    if (!fs.existsSync(filePath)) {
+    const postsDir = path.join(process.cwd(), "content/posts");
+    const trashDir = path.join(process.cwd(), "content/trash");
+    const srcPath = path.join(postsDir, `${slug}.md`);
+
+    if (!fs.existsSync(srcPath)) {
       return Response.json({ error: "文件不存在" }, { status: 404 });
     }
 
-    fs.unlinkSync(filePath);
+    if (!fs.existsSync(trashDir)) {
+      fs.mkdirSync(trashDir, { recursive: true });
+    }
+
+    let destName = `${slug}.md`;
+    const destPath = path.join(trashDir, destName);
+    if (fs.existsSync(destPath)) {
+      const ts = Date.now();
+      destName = `${slug}-${ts}.md`;
+    }
+
+    fs.renameSync(srcPath, path.join(trashDir, destName));
 
     return Response.json({ ok: true });
   } catch (e) {

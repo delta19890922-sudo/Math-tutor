@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-type Tab = "write" | "browse";
+type Tab = "write" | "browse" | "trash";
 
 interface PostMeta {
   slug: string;
@@ -23,30 +23,30 @@ export default function AdminPage() {
       </h1>
 
       <div className="flex gap-1 mb-6 border-b border-zinc-200 dark:border-zinc-700">
-        <button
-          onClick={() => setTab("write")}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-            tab === "write"
-              ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
-              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-          }`}
-        >
-          写文章
-        </button>
-        <button
-          onClick={() => setTab("browse")}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-            tab === "browse"
-              ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
-              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-          }`}
-        >
-          现有文章
-        </button>
+        <TabButton label="写文章" active={tab === "write"} onClick={() => setTab("write")} />
+        <TabButton label="现有文章" active={tab === "browse"} onClick={() => setTab("browse")} />
+        <TabButton label="垃圾箱" active={tab === "trash"} onClick={() => setTab("trash")} />
       </div>
 
-      {tab === "write" ? <WriteTab /> : <BrowseTab />}
+      {tab === "write" && <WriteTab />}
+      {tab === "browse" && <BrowseTab />}
+      {tab === "trash" && <TrashTab />}
     </div>
+  );
+}
+
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+        active
+          ? "border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100"
+          : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -66,7 +66,6 @@ function WriteTab() {
   const [deployState, setDeployState] = useState<string | null>(null);
 
   const previewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const deployTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (!title) return;
@@ -110,10 +109,10 @@ function WriteTab() {
           setDeployState("部署失败 ✗");
           setLog((prev) => prev + "\n[部署] 构建失败，请检查日志。\n");
         } else {
-          deployTimer.current = setTimeout(check, 5000);
+          setTimeout(check, 5000);
         }
       } catch {
-        deployTimer.current = setTimeout(check, 5000);
+        setTimeout(check, 5000);
       }
     };
     setTimeout(check, 5000);
@@ -315,7 +314,7 @@ function BrowseTab() {
   };
 
   const handleDelete = async (slug: string, title: string) => {
-    if (!confirm(`确定删除「${title}」？删除后不可恢复。`)) return;
+    if (!confirm(`确定将「${title}」移到垃圾箱？`)) return;
     setDeleting(slug);
     try {
       const res = await fetch("/api/admin/delete-post", {
@@ -385,6 +384,80 @@ function BrowseTab() {
           <p className="text-sm text-zinc-400">从左侧选择一篇文章预览</p>
         )}
       </div>
+    </div>
+  );
+}
+
+function TrashTab() {
+  const [items, setItems] = useState<PostMeta[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+
+  const loadTrash = () => {
+    setLoading(true);
+    fetch("/api/admin/trash")
+      .then((r) => r.json())
+      .then((data) => { setItems(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => { loadTrash(); }, []);
+
+  const handleRestore = async (slug: string, title: string) => {
+    setRestoring(slug);
+    setMsg("");
+    try {
+      const res = await fetch("/api/admin/restore-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMsg(`已恢复「${title}」`);
+        loadTrash();
+      } else {
+        alert(`恢复失败: ${data.error}`);
+      }
+    } catch {
+      alert("恢复失败");
+    }
+    setRestoring(null);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          垃圾箱中的文章可以恢复，永久删除请手动删除文件。
+        </p>
+        {msg && <span className="text-sm text-green-600">{msg}</span>}
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-zinc-400">加载中...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-zinc-400">垃圾箱是空的</p>
+      ) : (
+        <div className="border border-zinc-200 rounded-lg divide-y divide-zinc-200 dark:border-zinc-700 dark:divide-zinc-700">
+          {items.map((item) => (
+            <div key={item.slug} className="flex items-center justify-between px-4 py-3">
+              <div>
+                <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</div>
+                <div className="text-xs text-zinc-400 mt-0.5">{item.date} · {item.category}</div>
+              </div>
+              <button
+                onClick={() => handleRestore(item.slug, item.title)}
+                disabled={restoring === item.slug}
+                className="text-xs px-3 py-1.5 rounded-md bg-zinc-200 text-zinc-700 hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+              >
+                {restoring === item.slug ? "..." : "恢复"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
