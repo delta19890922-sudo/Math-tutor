@@ -21,6 +21,7 @@ code {
 }
 
 .prose .katex { font-size: 1.1em; }
+.prose .katex .mfrac { font-size: 1.25em; }
 
 article h1,
 article h2,
