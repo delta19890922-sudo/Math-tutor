@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSession, getBaseUrl } from "@/lib/auth";
+import { createSession, getBaseUrl, verifyOAuthState } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
   if (!code) {
     return Response.json({ error: "no code" }, { status: 400 });
+  }
+  if (!(await verifyOAuthState(state))) {
+    return Response.json({ error: "invalid OAuth state" }, { status: 400 });
   }
 
   const clientId = process.env.GITHUB_CLIENT_ID;

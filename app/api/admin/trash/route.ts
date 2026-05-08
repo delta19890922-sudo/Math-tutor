@@ -1,8 +1,12 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import { requireAdmin } from "@/lib/auth";
 
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const trashDir = path.join(process.cwd(), "content/trash");
   if (!fs.existsSync(trashDir)) {
     return Response.json([]);

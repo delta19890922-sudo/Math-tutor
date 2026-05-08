@@ -1,11 +1,15 @@
 import fs from "fs";
 import path from "path";
 import { NextRequest } from "next/server";
+import { isSafeSlug, requireAdmin } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    const authError = await requireAdmin();
+    if (authError) return authError;
+
     const { slug, content } = await req.json();
-    if (!slug || !content) {
+    if (!isSafeSlug(slug) || !content) {
       return Response.json({ error: "slug 和 content 不能为空" }, { status: 400 });
     }
 

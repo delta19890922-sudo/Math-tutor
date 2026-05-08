@@ -1,4 +1,9 @@
+import { requireAdmin } from "@/lib/auth";
+
 export async function GET() {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   const token = process.env.VERCEL_TOKEN;
   if (!token) {
     return Response.json({ connected: false, error: "未配置 VERCEL_TOKEN" });

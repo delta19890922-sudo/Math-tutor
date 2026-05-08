@@ -1,9 +1,14 @@
 import { cookies } from "next/headers";
 
 const COOKIE_NAME = "session";
+const OAUTH_STATE_COOKIE = "oauth_state";
 
 function getSecret(): string {
-  return process.env.AUTH_SECRET || "fallback-dev-only-secret-change-me";
+  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET is required in production");
+  }
+  return "fallback-dev-only-secret-change-me";
 }
 
 function getAllowedUsers(): string[] {
@@ -19,6 +24,24 @@ export function getGitHubOAuthUrl(state: string): string {
   const clientId = process.env.GITHUB_CLIENT_ID || "";
   const redirectUri = `${getBaseUrl()}/api/auth/callback`;
   return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&scope=read:user`;
+}
+
+export async function setOAuthState(state: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 10 * 60,
+  });
+}
+
+export async function verifyOAuthState(state: string | null): Promise<boolean> {
+  const cookieStore = await cookies();
+  const stored = cookieStore.get(OAUTH_STATE_COOKIE)?.value;
+  cookieStore.delete(OAUTH_STATE_COOKIE);
+  return Boolean(state && stored && state === stored);
 }
 
 export async function createSession(user: string): Promise<void> {
@@ -50,6 +73,18 @@ export async function verifySession(): Promise<string | null> {
   if (!user || !expStr || Date.now() > parseInt(expStr)) return null;
   if (!getAllowedUsers().includes(user)) return null;
   return user;
+}
+
+export async function requireAdmin(): Promise<Response | null> {
+  const user = await verifySession();
+  if (!user) {
+    return Response.json({ error: "未登录" }, { status: 401 });
+  }
+  return null;
+}
+
+export function isSafeSlug(slug: unknown): slug is string {
+  return typeof slug === "string" && /^[\p{L}\p{N}_-]{1,120}$/u.test(slug);
 }
 
 export async function clearSession(): Promise<void> {

@@ -31,6 +31,12 @@ html.dark pre {
   background-color: #0d1117;
 }
 
+.ans-wrap { cursor: pointer; border-bottom: 1px dashed #d4d4d4; }
+.ans-wrap .ans { opacity: 0; transition: opacity 0.25s; }
+.ans-wrap:hover .ans { opacity: 1; }
+.ans-wrap .ans::before { content: "＝ "; }
+.dark .ans-wrap { border-bottom-color: #3f3f46; }
+
 html.dark .shiki,
 html.dark .shiki span {
   color: var(--shiki-dark) !important;
