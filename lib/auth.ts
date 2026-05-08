@@ -11,8 +11,8 @@ function getAllowedUsers(): string[] {
 }
 
 function getBaseUrl(): string {
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+  if (process.env.NEXT_PUBLIC_URL) return process.env.NEXT_PUBLIC_URL;
+  return `http://localhost:3000`;
 }
 
 export function getGitHubOAuthUrl(state: string): string {
