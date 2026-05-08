@@ -18,6 +18,39 @@ const DRAFT_KEY = "admin-draft";
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("write");
   const [editSlug, setEditSlug] = useState<string | null>(null);
+  const [auth, setAuth] = useState<{ loading: boolean; user: string | null }>({ loading: true, user: null });
+
+  useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((d) => {
+      setAuth(d.authed ? { loading: false, user: d.user } : { loading: false, user: null });
+    }).catch(() => setAuth({ loading: false, user: null }));
+  }, []);
+
+  if (auth.loading) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-sm text-zinc-400">验证中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auth.user) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100">管理后台</h1>
+          <p className="text-sm text-zinc-400">使用 GitHub 登录后管理文章</p>
+          <a href="/api/auth/github"
+            className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            使用 GitHub 登录
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -28,8 +61,13 @@ export default function AdminPage() {
           </h1>
           <p className="text-sm text-zinc-400 mt-0.5">写文章、管理内容、一键部署</p>
         </div>
-        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">A</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-zinc-400">{auth.user}</span>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="text-xs text-zinc-400 hover:text-red-400 transition-colors">
+              退出
+            </button>
+          </form>
         </div>
       </div>
 
