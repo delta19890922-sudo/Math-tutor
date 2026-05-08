@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   return (
@@ -11,29 +10,26 @@ export default function Header() {
         >
           阿饱数学胎教
         </Link>
-        <div className="flex items-center gap-4">
-          <nav className="flex items-center gap-6 text-sm font-medium">
-            <Link
-              href="/search"
-              className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              搜索
-            </Link>
-            <Link
-              href="/tags"
-              className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              标签
-            </Link>
-            <Link
-              href="/categories"
-              className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              分类
-            </Link>
-          </nav>
-          <ThemeToggle />
-        </div>
+        <nav className="flex items-center gap-6 text-sm font-medium">
+          <Link
+            href="/search"
+            className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            搜索
+          </Link>
+          <Link
+            href="/tags"
+            className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            标签
+          </Link>
+          <Link
+            href="/categories"
+            className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            分类
+          </Link>
+        </nav>
       </div>
     </header>
   );
