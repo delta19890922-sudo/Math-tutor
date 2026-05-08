@@ -15,7 +15,7 @@ slug: "complex-numbers-exercises"
 
 ## 一、基础运算与 i 的性质
 
-1. 计算：$\dfrac{(1 + i)^{2}}{1 - i} + (2 + i)(2 - i)$。<span class="ans-wrap"><span class="ans">$4 + i$</span></span>
+1. 计算：$\frac{(1 + i)^{2}}{1 - i} + (2 + i)(2 - i)$。<span class="ans-wrap"><span class="ans">$4 + i$</span></span>
 
 2. 已知 $i$ 为虚数单位，求 $i + i^{2} + i^{3} + \ldots + i^{2026}$ 的值。<span class="ans-wrap"><span class="ans">$i - 1$</span></span>
 
